@@ -25,7 +25,7 @@ def generate_sample_data(n_samples=1000):
         'group': ['control'] * n_samples + ['treatment'] * n_samples,
         'conversion': np.concatenate([control_conversion, treatment_conversion]),
         'revenue': np.concatenate([control_revenue, treatment_revenue]),
-        'date': pd.date_range(start='2024-01-01', periods=2*n_samples, freq='H')
+        'date': pd.date_range(start='2025-01-01', periods=2*n_samples, freq='H')
     })
     
     return df
@@ -51,8 +51,10 @@ def calculate_significance(control_data, treatment_data, alpha=0.05):
 # Title and description
 st.title('A/B Testing Analysis Dashboard')
 st.markdown("""
-This dashboard provides comprehensive analysis of A/B test results including 
-statistical significance testing, effect size analysis, and visualizations.
+This dashboard helps analyze A/B test results by providing:
+- Statistical significance testing
+- Effect size analysis 
+- Visual comparisons between control and treatment groups
 """)
 
 # Sidebar controls
@@ -60,7 +62,8 @@ st.sidebar.header('Test Configuration')
 alpha = st.sidebar.slider('Significance Level (α)', 0.01, 0.10, 0.05, 0.01)
 metric_type = st.sidebar.selectbox(
     'Select Metric',
-    ['conversion', 'revenue']
+    ['conversion', 'revenue'],
+    help="Conversion: Binary outcome (0/1) | Revenue: Continuous value in dollars"
 )
 
 # Load data
@@ -92,13 +95,16 @@ results = calculate_significance(control_data, treatment_data, alpha)
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.metric('P-value', f"{results['p_value']:.4f}")
+    st.metric('P-value', f"{results['p_value']:.4f}",
+              help="If p-value < α, the difference is statistically significant")
     
 with col2:
-    st.metric('Significant?', 'Yes' if results['significant'] else 'No')
+    st.metric('Significant?', 'Yes' if results['significant'] else 'No',
+              help=f"Based on significance level α={alpha}")
     
 with col3:
-    st.metric('Effect Size', f"{results['effect_size']:.4f}")
+    st.metric('Effect Size', f"{results['effect_size']:.4f}",
+              help="Cohen's d: <0.2 small, 0.2-0.5 medium, >0.8 large")
 
 # Visualizations
 st.header('Visualizations')
@@ -138,9 +144,14 @@ st.plotly_chart(fig, use_container_width=True)
 
 # Additional insights
 st.header('Additional Insights')
+relative_improvement = ((results['treatment_mean'] - results['control_mean']) / results['control_mean'] * 100)
+
 st.markdown(f"""
-- The treatment group shows a {results['effect_size']:.2%} effect size compared to the control group
-- Mean {metric_type} for control group: {results['control_mean']:.4f}
-- Mean {metric_type} for treatment group: {results['treatment_mean']:.4f}
-- The difference is{' ' if results['significant'] else ' not '} statistically significant at α={alpha}
+### Key Findings:
+- **Effect Size**: {abs(results['effect_size']):.3f} ({'favoring treatment' if results['effect_size'] > 0 else 'favoring control'})
+  - {'Small' if abs(results['effect_size']) < 0.2 else 'Medium' if abs(results['effect_size']) < 0.8 else 'Large'} effect size
+- **Relative Improvement**: {relative_improvement:.1f}% {('increase' if relative_improvement > 0 else 'decrease')} in {metric_type}
+- **Statistical Significance**: The difference is{' ' if results['significant'] else ' not '} statistically significant at α={alpha}
+  - Control group mean: {results['control_mean']:.4f}
+  - Treatment group mean: {results['treatment_mean']:.4f}
 """)
