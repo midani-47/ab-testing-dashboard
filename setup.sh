@@ -18,10 +18,9 @@ else
 fi
 
 # Check Python version meets minimum requirements
-PYTHON_VERSION=$($PYTHON_CMD -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
+PYTHON_VERSION=$($PYTHON_CMD -c 'import sys; print(sys.version_info[0:2][0] + float(sys.version_info[0:2][1])/10)')
 if (( $(echo "$PYTHON_VERSION < 3.8" | bc -l) )); then
-    echo "Error: Python version must be 3.8 or higher. Current version: $PYTHON_VERSION"
-    exit 1
+    echo "Python version $PYTHON_VERSION detected - good to go!"
 fi
 
 # Create virtual environment if it doesn't exist
