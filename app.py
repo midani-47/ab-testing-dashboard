@@ -4,31 +4,10 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 from scipy import stats
+import io
 
 # Page config
 st.set_page_config(page_title='A/B Testing Dashboard', layout='wide')
-
-def generate_sample_data(n_samples=1000):
-    np.random.seed(42)
-    
-    # Control group data
-    control_conversion = np.random.binomial(1, 0.10, n_samples)
-    control_revenue = np.random.exponential(50, n_samples) * control_conversion
-    
-    # Treatment group data (with slight improvement)
-    treatment_conversion = np.random.binomial(1, 0.12, n_samples)
-    treatment_revenue = np.random.exponential(55, n_samples) * treatment_conversion
-    
-    # Create DataFrame
-    df = pd.DataFrame({
-        'user_id': range(2 * n_samples),
-        'group': ['control'] * n_samples + ['treatment'] * n_samples,
-        'conversion': np.concatenate([control_conversion, treatment_conversion]),
-        'revenue': np.concatenate([control_revenue, treatment_revenue]),
-        'date': pd.date_range(start='2025-01-01', periods=2*n_samples, freq='h')
-    })
-    
-    return df
 
 def calculate_significance(control_data, treatment_data, alpha=0.05):
     t_stat, p_value = stats.ttest_ind(control_data, treatment_data)
@@ -59,6 +38,65 @@ This dashboard helps analyze A/B test results by providing:
 
 # Sidebar controls
 st.sidebar.header('Test Configuration')
+
+# Data input method selection
+data_input_method = st.sidebar.radio(
+    "Choose data input method",
+    ["Upload CSV", "Use Sample Data"]
+)
+
+# File upload or sample data generation
+if data_input_method == "Upload CSV":
+    uploaded_file = st.sidebar.file_uploader(
+        "Upload your CSV file", 
+        type=['csv'],
+        help="File should contain columns: user_id, group (control/treatment), conversion (0/1), revenue (numeric), date"
+    )
+    
+    if uploaded_file is not None:
+        try:
+            data = pd.read_csv(uploaded_file)
+            required_columns = ['user_id', 'group', 'conversion', 'revenue', 'date']
+            if not all(col in data.columns for col in required_columns):
+                st.error("CSV file must contain these columns: user_id, group, conversion, revenue, date")
+                st.stop()
+            data['date'] = pd.to_datetime(data['date'])
+        except Exception as e:
+            st.error(f"Error reading the file: {str(e)}")
+            st.stop()
+    else:
+        st.warning("Please upload a CSV file or switch to sample data")
+        st.stop()
+else:
+    # Sample data generation with configurable parameters
+    st.sidebar.subheader("Sample Data Parameters")
+    n_samples = st.sidebar.slider("Number of samples per group", 100, 5000, 1000)
+    control_conv_rate = st.sidebar.slider("Control conversion rate", 0.01, 0.30, 0.10)
+    treatment_conv_rate = st.sidebar.slider("Treatment conversion rate", 0.01, 0.30, 0.12)
+    control_revenue_mean = st.sidebar.slider("Control revenue mean", 10.0, 100.0, 50.0)
+    treatment_revenue_mean = st.sidebar.slider("Treatment revenue mean", 10.0, 100.0, 55.0)
+    
+    # Generate sample data with user parameters
+    np.random.seed(None)  # Remove fixed seed
+    
+    # Control group data
+    control_conversion = np.random.binomial(1, control_conv_rate, n_samples)
+    control_revenue = np.random.exponential(control_revenue_mean, n_samples) * control_conversion
+    
+    # Treatment group data
+    treatment_conversion = np.random.binomial(1, treatment_conv_rate, n_samples)
+    treatment_revenue = np.random.exponential(treatment_revenue_mean, n_samples) * treatment_conversion
+    
+    # Create DataFrame
+    data = pd.DataFrame({
+        'user_id': range(2 * n_samples),
+        'group': ['control'] * n_samples + ['treatment'] * n_samples,
+        'conversion': np.concatenate([control_conversion, treatment_conversion]),
+        'revenue': np.concatenate([control_revenue, treatment_revenue]),
+        'date': pd.date_range(start='2025-01-01', periods=2*n_samples, freq='h')
+    })
+
+# Test configuration
 alpha = st.sidebar.slider('Significance Level (α)', 0.01, 0.10, 0.05, 0.01)
 metric_type = st.sidebar.selectbox(
     'Select Metric',
@@ -66,11 +104,8 @@ metric_type = st.sidebar.selectbox(
     help="Conversion: Binary outcome (0/1) | Revenue: Continuous value in dollars"
 )
 
-# Load data
-data = generate_sample_data()
-
 # Display sample data
-st.header('Sample Data Preview')
+st.header('Data Preview')
 st.dataframe(data.head())
 
 # Calculate and display metrics
@@ -155,3 +190,13 @@ st.markdown(f"""
   - Control group mean: {results['control_mean']:.4f}
   - Treatment group mean: {results['treatment_mean']:.4f}
 """)
+
+# Add download button for the data
+st.header('Download Data')
+csv = data.to_csv(index=False)
+st.download_button(
+    label="Download data as CSV",
+    data=csv,
+    file_name="ab_test_data.csv",
+    mime="text/csv"
+)
