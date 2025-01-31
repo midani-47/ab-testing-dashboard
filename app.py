@@ -25,7 +25,7 @@ def generate_sample_data(n_samples=1000):
         'group': ['control'] * n_samples + ['treatment'] * n_samples,
         'conversion': np.concatenate([control_conversion, treatment_conversion]),
         'revenue': np.concatenate([control_revenue, treatment_revenue]),
-        'date': pd.date_range(start='2025-01-01', periods=2*n_samples, freq='H')
+        'date': pd.date_range(start='2025-01-01', periods=2*n_samples, freq='h')
     })
     
     return df
