@@ -2,45 +2,95 @@
 
 A comprehensive dashboard for analyzing A/B test results with statistical rigor. This tool helps data scientists and analysts make data-driven decisions through statistical analysis and visualization of A/B test results.
 
-## Features
+## Prerequisites
 
-- Statistical significance testing with configurable significance level (α)
-- Effect size calculation (Cohen's d)
-- Interactive visualizations including:
-  - Distribution comparison
-  - Box plots
-  - Time series analysis
-- Flexible metric selection (conversion rates, revenue)
-- Real-time calculation of key statistics
-- Interactive dashboard built with Streamlit
-- Sample data generation for demonstration
+- Python 3.8 or higher
+- Git (for cloning the repository)
 
-## Installation
+## Quick Start
+
+### For macOS/Linux:
+```bash
+# Clone the repository
+git clone https://github.com/midani-47/ab-testing-dashboard.git
+cd ab-testing-dashboard
+
+# Run the setup script
+chmod +x setup.sh
+./setup.sh
+```
+
+### For Windows:
+```bash
+# Clone the repository
+git clone https://github.com/midani-47/ab-testing-dashboard.git
+cd ab-testing-dashboard
+
+# Run the setup script
+setup.bat
+```
+
+After installation, run the dashboard:
+```bash
+# The setup script will create and activate a virtual environment
+streamlit run app.py
+```
+
+Then open your browser and navigate to `http://localhost:8501`
+
+## Manual Installation (if setup script doesn't work)
 
 ```bash
 # Clone the repository
 git clone https://github.com/midani-47/ab-testing-dashboard.git
 cd ab-testing-dashboard
 
-# Create and activate virtual environment (optional but recommended)
+# Create and activate virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# For Windows:
+venv\Scripts\activate
+# For macOS/Linux:
+source venv/bin/activate
+
+# Upgrade pip
+pip install --upgrade pip
 
 # Install dependencies
 pip install -r requirements.txt
-```
 
-## Usage
-
-To run the dashboard:
-
-```bash
+# Run the dashboard
 streamlit run app.py
 ```
 
-Then open your browser and navigate to `http://localhost:8501`
+## Troubleshooting
 
-## Features Explained
+If you encounter any issues during installation:
+
+1. Make sure Python 3.8+ is installed:
+   ```bash
+   python --version
+   ```
+
+2. For macOS users, if you get compilation errors, install Xcode Command Line Tools:
+   ```bash
+   xcode-select --install
+   ```
+
+3. For Windows users, make sure you have the latest pip:
+   ```bash
+   python -m pip install --upgrade pip
+   ```
+
+4. If streamlit command is not found, try using the full path:
+   ```bash
+   # Windows
+   .\venv\Scripts\streamlit.exe run app.py
+   # macOS/Linux
+   ./venv/bin/streamlit run app.py
+   ```
+
+## Features
 
 ### 1. Statistical Analysis
 - **Significance Testing**: Uses Student's t-test to compare control and treatment groups
